@@ -1,0 +1,17 @@
+calib/
+output/
+pretrained_models/
+checkpoints/
+videos/
+wan_models/
+exp_logs/
+test_out/
+*.pyc
+*__pycache__*
+pytorch_job.o*
+PBS_logs/
+weights_vis/
+logs/
+*.log
+evaluation_results/
+outlier_imgs/
