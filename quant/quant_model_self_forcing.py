@@ -54,12 +54,6 @@ class QuantModelSelfForcing(nn.Module):
     def forward(self, *args, **kwargs):
         return self.model(*args, **kwargs)
     
-    def set_running_stat(self, running_stat: bool, sm_only=False):
-        for m in self.model.modules():
-            if isinstance(m, QuantCausalWanAttentionBlock):
-                pass
-            if isinstance(m, QuantModule) and not sm_only:
-                m.set_running_stat(running_stat)
 
     def set_grad_ckpt(self, grad_ckpt: bool):
         for m in self.model.modules():
@@ -71,36 +65,17 @@ class QuantModelSelfForcing(nn.Module):
             if isinstance(m, (QuantModule)):
                 m.set_curr_chunk_index(curr_chunk_index)
 
-    def set_curr_time(self, t):
-        for m in self.model.modules():
-            if isinstance(m, (QuantModule)):
-                m.set_curr_time(t)
-
     def set_collect_recon_data(self, collect_recon_data: bool):
         for m in self.model.modules():
             # if isinstance(m, (QuantCausalWanAttentionBlock))
             if isinstance(m, (QuantModule)):
                 m.set_collect_recon_data(collect_recon_data)
 
-    def set_collect_smooth_data(self, collect_smooth_data: bool):
-        for m in self.model.modules():
-            if isinstance(m, (QuantModule)):
-                m.set_collect_smooth_data(collect_smooth_data)
-
-    def calc_smooth_scale(self,):
-        for m in self.model.modules():
-            if isinstance(m, (QuantModule)):
-                m.calc_smooth_scale()
 
     def set_only_k_quant(self, k):
         for m in self.model.modules():
             if isinstance(m, (QuantModule)):
                 m.set_only_k_quant(k)
-
-    def set_only_time_t_quant(self, t):
-        for m in self.model.modules():
-            if isinstance(m, (QuantModule)):
-                m.set_only_time_t_quant(t)
 
     def set_sensitivity(self, sensitivity):
         for m in self.model.modules():

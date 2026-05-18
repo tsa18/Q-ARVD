@@ -91,9 +91,6 @@ def layer_reconstruction(model, layer: QuantModule,
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-
-    # ========== Chunk加权修改：拆分(数据, chunk_id)，拼接X/Y/ChunkID ==========
-    # 拆分收集的元组数据 (tensor, chunk_id)
     X_list = []
     chunk_ids_list = []
     time_list = []
@@ -104,18 +101,17 @@ def layer_reconstruction(model, layer: QuantModule,
     Y_list = []
     for y, _, _ in layer.collected_Ys:
         Y_list.append(y)
-    # 拼接所有数据
+    # concat input and output
     X = torch.cat(X_list, dim=0)
     Y = torch.cat(Y_list, dim=0)
     chunk_ids = torch.cat(chunk_ids_list, dim=0)
     time_ids = torch.cat(time_list, dim=0)
-    # ============================================================
 
 
     X = X.to(device)
     Y = Y.to(device).float()
 
-    # ========== Chunk 加权 ==========
+    # ========== calculate chunkwise weigts ==========
     raw_chunk_weights = layer.sensitivity if layer.sensitivity is not None else [1,1,1,1,1,1,1]
     mean_raw = sum(raw_chunk_weights) / len(raw_chunk_weights)
     scaled_chunk_weights = [w / mean_raw for w in raw_chunk_weights]
@@ -124,7 +120,7 @@ def layer_reconstruction(model, layer: QuantModule,
 
     sample_weights = sample_weights_chunk
 
-    if layer.use_dual_scale or layer.is_out_layer:
+    if layer.use_dual_scale:
         sample_weights = torch.ones_like(sample_weights)
     logger.info(f"sample weight:{sample_weights}")
 
@@ -135,9 +131,7 @@ def layer_reconstruction(model, layer: QuantModule,
         X_batch = X[idx]
         Y_batch = Y[idx]
         Y_quant_batch = layer(X_batch).float()
-        # ========== Chunk加权修改：采样对应样本权重 ==========
         weight_batch = sample_weights[idx]
-        # ====================================================
 
         optimizer_w.zero_grad()
         optimizer_a.zero_grad()
@@ -218,8 +212,8 @@ class LossFunction:
 
             per_sample_loss = (pred - tgt).abs().pow(self.p).sum(1)      # 8x4680x1536 ->8x1536  
             sample_weight = sample_weight.view([-1] + [1] * (per_sample_loss.dim() - 1))   
+            # ==========  chunkwise weigts ==========
             rec_loss = (per_sample_loss * sample_weight).mean()   
-            ###### logger.info(f"pred shape: {pred.shape}") # 8x4680x1536
 
         elif self.rec_loss == 'fisher_diag':
             rec_loss = ((pred - tgt).pow(2) * grad.pow(2)).sum(1).mean()

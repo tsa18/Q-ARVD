@@ -27,7 +27,7 @@ from pipeline import (
 # from quant.block_recon_self_forcing import reconstruct
 from quant.layer_recon_self_forcing import reconstruct
 from quant.quant_layer import UniformAffineQuantizer
-from utils.delta_smooth import find_outlier_channels
+from utils.outlier_adaptive_dual_scale import find_outlier_channels
 
 
 gpu = torch.device(f'cuda:{torch.cuda.current_device()}')
@@ -89,7 +89,6 @@ def get_latents_when_quant_chunk_k(pipeline, cali_prompts, k=0, fp=False, exp_sa
             mark = k if not fp else 'fp'
             output_path = os.path.join(exp_save_path, f'{mark}-{prompt[:100]}-{seed_idx}.mp4')
             write_video(output_path, video[seed_idx], fps=16)
-
 
 
         collected_latents.append(latents.cpu())
@@ -165,7 +164,7 @@ def main(args):
         method='mad_zscore',
         mad_threshold=3.5,
         min_ratio_vs_median = 1.2,
-        layer_name_filter=['block'], ## all layers
+        layer_name_filter=['block'],
     )
     
     #### 4. Inference with quantized model
@@ -204,15 +203,15 @@ def main(args):
             low_memory=False,
         )
     
-    k_list = [0,1,2,3,4,5,6]
-    cali_num = 100
+    k_list = [0,1,2,3,4,5,6] # 7 chunks
+    cali_num = 100 # use 100 videos to calculate sensitivity
     logger.info(f"cali num:{cali_num}")
     latents_fp = get_latents_when_quant_chunk_k(pipeline, all_prompts[0:cali_num], k=None, fp=True, exp_save_path=exp_save_path)
     logger.info(f"latent shape: {latents_fp.shape}")
     errors_chunks = []
     for k in k_list:
         latents = get_latents_when_quant_chunk_k(pipeline, all_prompts[0:cali_num], k=k, fp=False, exp_save_path=exp_save_path)
-        errors_chunks.append((latents.float() -latents_fp.float()).pow(2).mean().item())
+        errors_chunks.append((latents.float() -latents_fp.float()).pow(2).mean().item()) # use MSE to measure sensitivity
     logger.info(f"errors: {errors_chunks}")
     errors_tensor = torch.tensor(errors_chunks)
     normalized = errors_tensor / errors_tensor.sum()
@@ -222,13 +221,10 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    # General arguments:
     parser.add_argument("--exp_name", type=str, help="Path to the config file")
-    # Quantization arguments:
     parser.add_argument("--weight_bit", type=int, default=8, help="int bit for weight quantization")
     parser.add_argument("--act_bit", type=int, default=8, help="int bit for activation quantization")
     parser.add_argument("--config_path", type=str, help="Path to the config file")
-    # inference
     parser.add_argument("--checkpoint_path", type=str, help="Path to the checkpoint folder")
     parser.add_argument("--data_path", type=str, help="Path to the dataset")
     parser.add_argument("--extended_prompt_path", type=str, help="Path to the extended prompt")

@@ -22,7 +22,7 @@
 Q-ARVD proposes the first quantization framework tailored for autoregressive video diffusion models. It introduces a final-quality guided frame-weighting mechanism to handle the unbalanced frame-wise quantization sensitivity, and an outlier-aware adaptive dual-scale strategy to address the heterogeneous outlier patterns. 
 
 <p align="center">
-  <img src="assets/framework.jpg" alt="Q-ARVD Framework" width="90%">
+  <img src="assets/framework.jpg" alt="Q-ARVD Framework" width="98%">
 </p>
 
 ---

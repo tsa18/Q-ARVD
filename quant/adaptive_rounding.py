@@ -51,7 +51,7 @@ class AdaRoundQuantizer(nn.Module):
             return x_float_q
         else:
             # x_int = x_floor + (self.alpha >= 0).float()
-            # print('merged, straight through')
+            # print('merged, straight through') ## merged in after recon in layer_recon_self_forcing.py
             return x
         
 

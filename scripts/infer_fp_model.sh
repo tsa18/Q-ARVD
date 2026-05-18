@@ -10,7 +10,7 @@ CUDA_VISIBLE_DEVICES=0 python load_and_inference.py   \
     --checkpoint_path checkpoints/self_forcing_dmd.pt  \
     --data_path ${DATA_PATH} \
     --use_ema \
-    --test_name  vbench_${EXP_NAME}  --quant_ckpt_path exp_logs/${EXP_NAME}-w${Bit_W}a${Bit_A}/quant_model.ckpt \
+    --test_name  vbench_${EXP_NAME}  \
     --gen_num ${GEN_NUM}
 
 

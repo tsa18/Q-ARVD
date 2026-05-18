@@ -21,12 +21,11 @@ from omegaconf import OmegaConf
 from pipeline import (
     CausalInferencePipeline,
 )
-# from quant.block_recon_self_forcing import reconstruct
 from quant.layer_recon_self_forcing import reconstruct
 from quant.quant_layer import UniformAffineQuantizer
 from snapshot import Snapshot
 import sys
-from utils.delta_smooth import find_outlier_channels
+from utils.outlier_adaptive_dual_scale import find_outlier_channels
 
 gpu = torch.device(f'cuda:{torch.cuda.current_device()}')
 if "LOCAL_RANK" in os.environ:
@@ -133,7 +132,6 @@ def main(args):
                   + all_prompts[0:collected_recon_data_round] + all_prompts
 
     for i, data in tqdm(enumerate(all_prompts), disable=(local_rank != 0)):
-        if i>=3 + act_init_total_round + collected_recon_data_round +1: break
         logger.info(f'-------------------- i={i} --------------------')
         if i == 0:
             pipeline.generator.model.set_quant_state(True, False)
@@ -180,11 +178,6 @@ def main(args):
         video = 255.0 * torch.cat(all_video, dim=1)
         # Clear VAE cache
         pipeline.vae.model.clear_cache()
-
-
-
-        
-
 
 
 if __name__ == "__main__":

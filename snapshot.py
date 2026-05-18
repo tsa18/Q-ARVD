@@ -1,14 +1,14 @@
 """
-snapshot.py —— PyTorch 实验快照工具
+snapshot.py -- PyTorch experiment snapshot tool
 
-用法：
+Usage:
     from snapshot import Snapshot
 
     snap = Snapshot(
         command="python train.py --lr 0.01 --epochs 50",
-        save_dir="snapshots/exp_001",   # 可选，默认 snapshots/<时间戳>
+        save_dir="snapshots/exp_001",   # optional, default snapshots/<timestamp>
     )
-    snap_path = snap.save()             # 返回快照目录 Path
+    snap_path = snap.save()             # returns the snapshot directory Path
 """
 
 import sys
@@ -26,18 +26,18 @@ DEFAULT_EXCLUDE_DIRS = {
 
 class Snapshot:
     """
-    参数
-    ----
+    Parameters
+    ----------
     command : str
-        本次实验命令，仅用于记录。
-    save_dir : str | Path, 可选
-        快照保存目录。默认为 <项目根>/snapshots/<时间戳>。
-    root : str | Path, 可选
-        项目根目录，默认为当前工作目录。
+        The experiment command, for record-keeping only.
+    save_dir : str | Path, optional
+        Snapshot save directory. Defaults to <project_root>/snapshots/<timestamp>.
+    root : str | Path, optional
+        Project root directory, defaults to current working directory.
     save_env : bool
-        是否保存 pip freeze，默认 True。
+        Whether to save pip freeze output, default True.
     verbose : bool
-        是否打印日志，默认 True。
+        Whether to print log messages, default True.
     """
 
     def __init__(
@@ -59,19 +59,19 @@ class Snapshot:
             timestamp  = datetime.now().strftime("%Y%m%d_%H%M%S")
             self._dest = self.root / "snapshots" / timestamp
 
-        # save_dir 本身不应被当作源码目录扫描
+        # save_dir itself should not be scanned as source directory
         exclude = DEFAULT_EXCLUDE_DIRS | {self._dest.name}
         self._exclude = exclude
 
     @property
     def path(self) -> Path:
-        """快照目录路径（save() 调用前即可获取，用于提前配置 logger 等）。"""
+        """Snapshot directory path (available before save() is called, useful for early logger setup)."""
         return self._dest
 
     def save(self) -> Path:
-        """执行快照，返回快照目录 Path。"""
+        """Execute snapshot, return the snapshot directory Path."""
         self._dest.mkdir(parents=True, exist_ok=True)
-        self._log(f"\n📸 快照目录：{self._dest}")
+        self._log(f"\nSnapshot directory: {self._dest}")
 
         py_files = self._collect_py_files()
         self._copy_sources(py_files)
@@ -79,10 +79,10 @@ class Snapshot:
         if self.save_env:
             self._save_env_info()
 
-        self._log(f"✅ 快照完成\n")
+        self._log(f"Snapshot saved successfully\n")
         return self._dest
 
-    # ── 内部方法 ─────────────────────────────────────────────────────────────
+    # -- Internal methods ------------------------------------------------------------
 
     def _collect_py_files(self) -> list:
         files = []
@@ -100,20 +100,20 @@ class Snapshot:
             target = src_dir / src.relative_to(self.root)
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(src, target)
-        self._log(f"  ✔ 已复制 {len(py_files)} 个 .py 文件 → src/")
+        self._log(f"  Copied {len(py_files)} .py files -> src/")
 
     def _write_meta(self, py_files: list) -> None:
         lines = [
-            f"快照时间：{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
-            f"运行命令：{self.command or '（未指定）'}",
-            f"工作目录：{self.root}",
-            f"操作系统：{platform.platform()}",
-            f"Python：{sys.version.split()[0]}",
-            f"文件数：{len(py_files)} 个 .py",
-            "", "── 文件列表 ──",
+            f"Snapshot time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+            f"Command: {self.command or '(not specified)'}",
+            f"Working directory: {self.root}",
+            f"OS: {platform.platform()}",
+            f"Python: {sys.version.split()[0]}",
+            f"Files: {len(py_files)} .py",
+            "", "-- File list --",
         ] + [f"  {f.relative_to(self.root)}" for f in sorted(py_files)]
         (self._dest / "meta.txt").write_text("\n".join(lines), encoding="utf-8")
-        self._log(f"  ✔ 元信息已保存 → meta.txt")
+        self._log(f"  Metadata saved -> meta.txt")
 
     def _save_env_info(self) -> None:
         try:
@@ -122,9 +122,9 @@ class Snapshot:
                 capture_output=True, text=True,
             )
             (self._dest / "environment.txt").write_text(result.stdout, encoding="utf-8")
-            self._log(f"  ✔ 环境信息已保存 → environment.txt")
+            self._log(f"  Environment info saved -> environment.txt")
         except Exception as e:
-            self._log(f"  ⚠ 无法获取环境信息：{e}")
+            self._log(f"  Could not fetch environment info: {e}")
 
     def _log(self, msg: str) -> None:
         if self.verbose:

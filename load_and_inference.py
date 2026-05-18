@@ -4,9 +4,6 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
-"""
-Sample new images from a pre-trained DiT.
-"""
 import torch
 import torch.nn as nn
 torch.backends.cuda.matmul.allow_tf32 = True
@@ -96,7 +93,6 @@ def main(args):
     output_path = os.path.join("test_out", args.test_name)
     os.makedirs(output_path, exist_ok=True)
 
-    # for _ in range(10000000000):
     for _ in range(1):
         for i, data in tqdm(enumerate(all_prompts), disable=(local_rank != 0)):
             logger.info("Generate videos with quantized model with lora reconstruction!")
@@ -147,8 +143,7 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--test_name", type=str, help="Path to the config file")
-    parser.add_argument("--quant_ckpt_path", type=str, help="Path to the quantized checkpoint")
-    # inference
+    parser.add_argument("--quant_ckpt_path",default='none', type=str, help="Path to the quantized checkpoint")
     parser.add_argument("--config_path", type=str, help="Path to the config file")
     parser.add_argument("--checkpoint_path", type=str, help="Path to the checkpoint folder")
     parser.add_argument("--data_path", type=str, help="Path to the dataset")
@@ -159,8 +154,6 @@ if __name__ == "__main__":
     parser.add_argument("--num_samples", type=int, default=1, help="Number of samples to generate per prompt")
     parser.add_argument("--gen_num", type=int, default=50, help="Number of videos to generate")
     parser.add_argument("--use_quant", action="store_true")
-    
-
 
     args = parser.parse_args()
     main(args)

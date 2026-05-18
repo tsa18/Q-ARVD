@@ -190,8 +190,7 @@ class CausalInferencePipeline(torch.nn.Module):
             # Step 3.1: Spatial denoising loop. We also collect cali data here
             for index, current_timestep in enumerate(self.denoising_step_list):
                 print(f"current_timestep: {current_timestep}")
-                if hasattr(self.generator.model, "set_curr_time"):
-                    self.generator.model.set_curr_time(index)
+            
                 
                 # set current timestep
                 timestep = torch.ones(
@@ -231,8 +230,7 @@ class CausalInferencePipeline(torch.nn.Module):
             output[:, current_start_frame:current_start_frame + current_num_frames] = denoised_pred
 
             # Step 3.3: rerun with timestep zero to update KV cache using clean context
-            if hasattr(self.generator.model, "set_curr_time"):
-                self.generator.model.set_curr_time(4)
+           
             context_timestep = torch.ones_like(timestep) * self.args.context_noise
             self.generator(
                 noisy_image_or_video=denoised_pred,

@@ -56,51 +56,11 @@ class QuantCausalWanAttentionBlock(BaseQuantBlock):
         self.block.cross_attn = QuantWanT2VCrossAttention(self.block.cross_attn, act_quant_params)
         self.block.ffn = QuantWanFFN(self.block.ffn, act_quant_params)
 
-        ### record data for reconstruction
-        ### 重构数据记录相关变量（完善初始化）
-        self.collect_recon_data = False  # 记录开关
-        self.collected_input_args: List[Tuple[Any, ...]] = []  # 记录位置参数
-        self.collected_input_kwargs: List[Dict[str, Any]] = []  # 记录关键字参数
-        # 可选：记录输出（如果重构需要）
-        self.collected_outputs: List[torch.Tensor] = []
-
 
 
     # reuse the original forward
     def forward(self,*args, **kwargs):
-         # 当开启记录时，保存输入（detach避免梯度关联，clone防止数据被覆盖）
-        if self.collect_recon_data:
-            # 对tensor类型的参数进行detach+clone，非tensor直接保存
-            saved_args = []
-            for arg in args:
-                if isinstance(arg, torch.Tensor):
-                    saved_args.append(arg.detach().cpu())
-                else:
-                    saved_args.append(arg)
-            self.collected_input_args.append(tuple(saved_args))
-            
-            saved_kwargs = {}
-            for k, v in kwargs.items():
-                if isinstance(v, torch.Tensor) and 'freqs' not in k:
-                    saved_kwargs[k] = v.detach().cpu()
-                    print(f"Collecting input for reconstruction - {k}: shape {v.shape}")
-                else:
-                    saved_kwargs[k] = v
-                    print(f"Collecting input for reconstruction - {k}: non-tensor or excluded from detaching")
-            self.collected_input_kwargs.append(saved_kwargs)
-
-         
-        # --------------------- forward -----------------
         output = self.block(*args, **kwargs)
-        # -----------------------------------------------
-
-         # 可选：记录输出（如果重构需要对比输出）
-        if self.collect_recon_data:
-            assert isinstance(output, torch.Tensor), "Output is not a tensor"
-            self.collected_outputs.append(output.detach().cpu())
-
-
-
         return output
 
     def set_quant_state(self, weight_quant: bool = False, act_quant: bool = False):
@@ -122,17 +82,18 @@ class QuantCausalWanSelfAttention(nn.Module):
 
     def __getattr__(self, name):
         """
-        属性委托方法:
-        __getattr__ 会在访问一个不存在的属性时被调用
-        当自身找不到属性时，去 self.attn 中查找
+        Attribute delegation method:
+        __getattr__ is called when accessing an attribute that doesn't exist
+        on the current object. If not found here, it falls back to self.attn.
         """
         try:
-        # 第一步：尝试按照 PyTorch 标准规则在当前类（Quant类）里找
-        # 这确保了 self.act_quant_params 能被正常访问
+            # Step 1: Try to find the attribute using PyTorch's standard lookup
+            # on the current class (Quant class).
+            # This ensures self.act_quant_params is accessible normally.
             return super().__getattr__(name)
         except AttributeError:
-        # 第二步：如果当前类确实没有，说明可能是原始 attn 里的属性
-        # 比如 self.attn.head_dim 或者 self.attn.q_proj
+            # Step 2: If not found in the current class, it may belong to the
+            # wrapped attn module — e.g. self.attn.head_dim or self.attn.q_proj.
             return getattr(self.attn, name)
     
     ## override orignial forward to enable smooth
@@ -305,17 +266,18 @@ class QuantWanT2VCrossAttention(nn.Module):
 
     def __getattr__(self, name):
         """
-        属性委托方法:
-        __getattr__ 会在访问一个不存在的属性时被调用
-        当自身找不到属性时，去 self.attn 中查找
+        Attribute delegation method:
+        __getattr__ is called when accessing an attribute that doesn't exist
+        on the current object. If not found here, it falls back to self.cross_attn.
         """
         try:
-        # 第一步：尝试按照 PyTorch 标准规则在当前类（Quant类）里找
-        # 这确保了 self.act_quant_params 能被正常访问
+            # Step 1: Try to find the attribute using PyTorch's standard lookup
+            # on the current class (Quant class).
+            # This ensures self.act_quant_params is accessible normally.
             return super().__getattr__(name)
         except AttributeError:
-        # 第二步：如果当前类确实没有，说明可能是原始 attn 里的属性
-        # 比如 self.attn.head_dim 或者 self.attn.q_proj
+            # Step 2: If not found in the current class, it may belong to the
+            # wrapped cross_attn module — e.g. self.cross_attn.head_dim or self.cross_attn.q_proj.
             return getattr(self.cross_attn, name)
     
     ## override orignial forward to enable smooth
@@ -366,17 +328,18 @@ class QuantWanFFN(nn.Module):
 
     def __getattr__(self, name):
         """
-        属性委托方法:
-        __getattr__ 会在访问一个不存在的属性时被调用
-        当自身找不到属性时，去 self.attn 中查找
+        Attribute delegation method:
+        __getattr__ is called when accessing an attribute that doesn't exist
+        on the current object. If not found here, it falls back to self.ffn.
         """
         try:
-        # 第一步：尝试按照 PyTorch 标准规则在当前类（Quant类）里找
-        # 这确保了 self.act_quant_params 能被正常访问
+            # Step 1: Try to find the attribute using PyTorch's standard lookup
+            # on the current class (Quant class).
+            # This ensures self.act_quant_params is accessible normally.
             return super().__getattr__(name)
         except AttributeError:
-        # 第二步：如果当前类确实没有，说明可能是原始 attn 里的属性
-        # 比如 self.attn.head_dim 或者 self.attn.q_proj
+            # Step 2: If not found in the current class, it may belong to the
+            # wrapped ffn module — e.g. self.ffn.hidden_dim or self.ffn.fc1.
             return getattr(self.ffn, name)
 
     def forward(self, x):
@@ -388,8 +351,6 @@ class QuantWanFFN(nn.Module):
 
 
     
-
-
 
 
 def get_specials():
