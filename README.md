@@ -14,7 +14,7 @@
     ·
     <a href="https://scholar.google.com/citations?user=w69Buq0AAAAJ&hl=en">Xinchao Wang</a><sup>1</sup><br>
     <sup>1</sup>National University of Singapore &nbsp; <sup>2</sup>The Hong Kong Polytechnic University</p>
-  <h3 align="center"><a href="https://arxiv.org/abs/2506.08009">Paper</a></h3>
+  <h3 align="center"><a href="https://arxiv.org/abs/2605.21072">Paper</a></h3>
 </p>
 
 ---
@@ -91,10 +91,5 @@ This codebase is built on top of the open-source implementations, including [Sel
 ## Citation
 If you find this codebase useful for your research, please kindly cite our paper:
 ```
-@article{huang2025selfforcing,
-  title={Self Forcing: Bridging the Train-Test Gap in Autoregressive Video Diffusion},
-  author={Huang, Xun and Li, Zhengqi and He, Guande and Zhou, Mingyuan and Shechtman, Eli},
-  journal={arXiv preprint arXiv:2506.08009},
-  year={2025}
-}
+TODO
 ```
