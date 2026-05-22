@@ -77,7 +77,7 @@ bash scripts/infer_fp_model.sh
 bash scripts/infer_quant_model.sh
 ```
 
-### Step 4. Calculate Vbench, FVD-FP, and LPIPS-FP Metrics
+### Step 4. (EVAL) Calculate Vbench, FVD-FP, and LPIPS-FP Metrics
 ```
 bash scripts/eval_quant_model.sh
 ```
@@ -91,5 +91,13 @@ This codebase is built on top of the open-source implementations, including [Sel
 ## Citation
 If you find this codebase useful for your research, please kindly cite our paper:
 ```
-TODO
+@misc{tang2026qarvd,
+      title={Q-ARVD: Quantizing Autoregressive Video Diffusion Models}, 
+      author={Siao Tang and Xinyin Ma and Gongfan Fang and Xingyi Yang and Xinchao Wang},
+      year={2026},
+      eprint={2605.21072},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/2605.21072}, 
+}
 ```
