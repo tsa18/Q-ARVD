@@ -91,13 +91,10 @@ This codebase is built on top of the open-source implementations, including [Sel
 ## Citation
 If you find this codebase useful for your research, please kindly cite our paper:
 ```
-@misc{tang2026qarvd,
-      title={Q-ARVD: Quantizing Autoregressive Video Diffusion Models}, 
-      author={Siao Tang and Xinyin Ma and Gongfan Fang and Xingyi Yang and Xinchao Wang},
-      year={2026},
-      eprint={2605.21072},
-      archivePrefix={arXiv},
-      primaryClass={cs.CV},
-      url={https://arxiv.org/abs/2605.21072}, 
+@article{tang2026q,
+  title={Q-ARVD: Quantizing Autoregressive Video Diffusion Models},
+  author={Tang, Siao and Ma, Xinyin and Fang, Gongfan and Yang, Xingyi and Wang, Xinchao},
+  journal={arXiv preprint arXiv:2605.21072},
+  year={2026}
 }
 ```
